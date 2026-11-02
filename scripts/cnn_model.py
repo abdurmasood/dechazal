@@ -5,7 +5,7 @@
 from keras.models import Sequential
 from keras.layers import Dense, Activation, Dropout, Flatten,\
     Conv2D, MaxPooling2D
-from keras.layers.normalization import BatchNormalization
+from keras.layers import BatchNormalization
 import numpy as np
 import directory_structure
 import os
@@ -14,7 +14,6 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 import keras
 from collections import deque
-from keras.utils import multi_gpu_model
 from keras.callbacks import EarlyStopping
 
 # classes model needs to learn to classify
