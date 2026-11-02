@@ -1,1 +1,14 @@
 *.pyc
+__pycache__/
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# Data and generated artifacts
+/data/
+/runs/
+/beat_write_dir/
+/testing/
+*.keras
+*.h5
+metrics.npy
