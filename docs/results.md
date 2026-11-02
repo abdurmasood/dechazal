@@ -83,8 +83,10 @@ not produce valid results:
 2. **Patient leakage.** The split was random by beat, so the same patients appeared in train and
    test. The test set was also used as validation data and to pick the best checkpoint.
 3. **Wrong lead for record 114.** Reading channel 0 gives V5 there, not MLII.
-4. **NovelNet couldn't be built.** Commit `aff2afe` added a 3×3 conv on a 2×2 feature map. The
-   NovelNet here restores the previous, buildable layer configuration.
+4. **The 2019 Novelnet couldn't be built.** Commit `aff2afe` added a 3×3 conv on a 2×2 feature
+   map. `alexnet_wide` is that model, renamed for what it is: AlexNet with a 13×13 first kernel,
+   wider conv4/conv5 (434 and 500 filters) and heavier dropout. It uses the layer configuration
+   from before `aff2afe` and is trained with the same settings as every other model.
 5. **No filtering.** Windows ran from one annotation to the next, so their length varied, and
    non-beat annotations (`+`, `~`, `|`) were treated as beats.
 
@@ -123,7 +125,7 @@ src/arrhythmia/
 │   └── images.py       beat → 224×224 image, memmap cache
 ├── models/
 │   ├── blocks.py       shared conv/dense blocks for the 2019 image CNNs
-│   ├── image_cnns.py   alexnet, novelnet layer specs
+│   ├── image_cnns.py   alexnet, alexnet_wide layer specs
 │   └── cnn1d.py        cnn1d, cnn1d_rr
 └── training/
     ├── fit.py          class weights, seeded fit, batch feeder

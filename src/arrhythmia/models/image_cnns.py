@@ -1,8 +1,9 @@
 """Layer specs of the two 2019 image CNNs, ported unchanged apart from 1-channel input.
 
 Source: scripts/cnn_model.py createModel(). AlexNet-style follows the 2019 file as last
-committed. NovelNet is taken from the commit before aff2afe, because aff2afe added a sixth
-3x3 conv that would run on a 2x2 feature map and cannot be built.
+committed. alexnet_wide (called Novelnet in the 2019 code) is taken from the commit before
+aff2afe, because aff2afe added a sixth 3x3 conv that would run on a 2x2 feature map and
+cannot be built.
 """
 
 from arrhythmia.models.blocks import ConvSpec, DenseSpec, ImageCnnSpec
@@ -19,8 +20,8 @@ ALEXNET = ImageCnnSpec(
     denses=(DenseSpec(4096, 0.4), DenseSpec(4096, 0.4), DenseSpec(1000, 0.4)),
 )
 
-NOVELNET = ImageCnnSpec(
-    name="novelnet",
+ALEXNET_WIDE = ImageCnnSpec(
+    name="alexnet_wide",
     convs=(
         ConvSpec(96, 13, strides=4, pool=True),
         ConvSpec(256, 11, pool=True),

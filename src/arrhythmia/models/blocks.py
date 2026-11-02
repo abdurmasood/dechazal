@@ -1,4 +1,4 @@
-"""Shared layer blocks for the 2019 image CNNs (AlexNet-style and NovelNet).
+"""Shared layer blocks for the 2019 image CNNs (AlexNet-style and alexnet_wide).
 
 Both 2019 models used the same pattern, Conv -> ReLU -> [MaxPool] -> BatchNorm for
 convolutions and Dense -> ReLU -> Dropout -> BatchNorm for the head. They differ only in
