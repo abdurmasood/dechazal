@@ -12,6 +12,7 @@ std across seeds, in %. Se is sensitivity and PPV is positive predictive value.
 | cnn1d | filtered beat window | 5 | 36.4 ± 3.8 | 80.3 ± 12.7 | 93.6 ± 1.0 | 5.7 ± 6.4 | 1.4 ± 1.1 | 74.9 ± 20.8 | 57.4 ± 28.3 | 0.4 ± 0.8 | 0.1 ± 0.1 |
 | cnn1d_rr | window + RR features | 5 | 39.3 ± 1.5 | 71.0 ± 20.6 | 94.4 ± 2.1 | 36.3 ± 35.1 | 5.3 ± 4.1 | 69.8 ± 18.2 | 73.5 ± 16.7 | 2.5 ± 5.2 | 0.2 ± 0.3 |
 | alexnet | 224×224 beat image | 3 | 24.4 ± 6.2 | 42.9 ± 35.0 | 92.6 ± 2.8 | 38.0 ± 46.7 | 2.7 ± 1.8 | 70.7 ± 35.5 | 35.2 ± 16.9 | 0.0 ± 0.0 | 0.0 ± 0.0 |
+| alexnet_wide | 224×224 beat image | 3 | 30.4 ± 9.9 | 65.8 ± 22.5 | 94.8 ± 2.4 | 23.8 ± 38.1 | 9.7 ± 2.3 | 56.2 ± 43.9 | 58.5 ± 37.9 | 18.0 ± 28.0 | 0.7 ± 0.6 |
 
 Q excluded: 8 (DS1), 7 (DS2).
 
@@ -19,10 +20,14 @@ Q excluded: 8 (DS1), 7 (DS2).
 
 ### How to read this
 
-- **The 2019 image representation is the weakest input.** On the same windows, split and
-  training settings, AlexNet on plotted beats reaches 24.4 macro-F1, compared with 36.4 for
-  cnn1d on the signal. Per-beat autoscaling discards amplitude, and the 28M-parameter model
-  swings between seeds: N Se ±35 and S Se ±47 mean some seeds label many normal beats as S.
+- **The 2019 image representation scores lower and is unstable.** On the same windows, split
+  and training settings, the two image CNNs reach 24.4 (alexnet) and 30.4 (alexnet_wide) macro-F1,
+  compared with 36.4 for cnn1d on the signal. Per-beat autoscaling discards amplitude, and both
+  image models swing between seeds. AlexNet's N Se ±35 and S Se ±47 mean some seeds label many
+  normal beats as S. alexnet_wide's seeds score 19.9, 32.1 and 39.4: its best seed matches cnn1d_rr,
+  its worst labels 21,446 normal beats as F. That collapse is the source of alexnet_wide's F Se of
+  18.0 (PPV 0.7). With three seeds and this spread, the gap between alexnet_wide and cnn1d is not
+  conclusive. The gap in stability is.
 - **S beats need rhythm information.** From beat shape alone, cnn1d detects almost no S beats
   (Se 5.7%). Adding RR intervals raises the mean to 36%, but the spread across seeds (±35) shows
   the model is unstable on S.
@@ -64,11 +69,10 @@ MIT-BIH record ──► MLII lead ──► baseline removal ──► 35 Hz lo
 | 2D input | Same windows drawn as a 224×224 line plot, min-max scaled per beat | Reproduces the 2019 representation, so input representation is the only difference. |
 | Imbalance | Balanced class weights, applied to both training and validation loss | No resampling. Weights are fixed, not tuned. |
 | Training | Adam 1e-3, at most 60 epochs, early stopping on weighted val loss (patience 8) | Validation has only 23 F beats, so a macro-F1 stopping rule would be noisy. |
-| Seeds | 5 seeds for the 1D models, 3 for the 2D model | Each seed covers weight initialisation, shuffling and dropout. |
+| Seeds | 5 seeds for the 1D models, 3 for each 2D model | Each seed covers weight initialisation, shuffling and dropout. |
 
 Each run writes `runs/<model>/seed<k>/` containing `metrics.json`, `confusion.csv`,
-`config.json` and `model.keras`. `novelnet` can also be selected but was not trained for the
-table.
+`config.json` and `model.keras`.
 
 ## What changed since 2019
 
@@ -83,8 +87,10 @@ not produce valid results:
 2. **Patient leakage.** The split was random by beat, so the same patients appeared in train and
    test. The test set was also used as validation data and to pick the best checkpoint.
 3. **Wrong lead for record 114.** Reading channel 0 gives V5 there, not MLII.
-4. **NovelNet couldn't be built.** Commit `aff2afe` added a 3×3 conv on a 2×2 feature map. The
-   NovelNet here restores the previous, buildable layer configuration.
+4. **The 2019 Novelnet couldn't be built.** Commit `aff2afe` added a 3×3 conv on a 2×2 feature
+   map. `alexnet_wide` is that model, renamed for what it is: AlexNet with a 13×13 first kernel,
+   wider conv4/conv5 (434 and 500 filters) and heavier dropout. It uses the layer configuration
+   from before `aff2afe` and is trained with the same settings as every other model.
 5. **No filtering.** Windows ran from one annotation to the next, so their length varied, and
    non-beat annotations (`+`, `~`, `|`) were treated as beats.
 
@@ -99,8 +105,8 @@ not produce valid results:
 - **MLII only.** de Chazal used both leads.
 - **Plain Se/PPV.** ANSI/AAMI EC57 exempts F beats classified as V from V's false positives.
   That convention is not applied here.
-- **Hardware.** cnn1d and cnn1d_rr were trained on an Apple-silicon CPU, and alexnet on an
-  NVIDIA RTX 4090 (JAX with CUDA 12). Seeds fix initialisation, shuffling and dropout, but
+- **Hardware.** cnn1d and cnn1d_rr were trained on an Apple-silicon CPU, and alexnet and
+  alexnet_wide on an NVIDIA RTX 4090 (JAX with CUDA 12). Seeds fix initialisation, shuffling and dropout, but
   floating-point results can still differ slightly across hardware, so expect small deviations
   from the table on other machines.
 - **RR features look one beat ahead.** cnn1d_rr uses the post-RR interval, so it is an offline
@@ -123,7 +129,7 @@ src/arrhythmia/
 │   └── images.py       beat → 224×224 image, memmap cache
 ├── models/
 │   ├── blocks.py       shared conv/dense blocks for the 2019 image CNNs
-│   ├── image_cnns.py   alexnet, novelnet layer specs
+│   ├── image_cnns.py   alexnet, alexnet_wide layer specs
 │   └── cnn1d.py        cnn1d, cnn1d_rr
 └── training/
     ├── fit.py          class weights, seeded fit, batch feeder

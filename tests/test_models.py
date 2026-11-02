@@ -19,7 +19,7 @@ def test_unknown_model_name_raises() -> None:
         build_model("resnet", N_CLASSES)
 
 
-@pytest.mark.parametrize("name", ["alexnet", "novelnet"])
+@pytest.mark.parametrize("name", ["alexnet", "alexnet_wide"])
 def test_2d_models_take_single_channel_224_images(name: str) -> None:
     model = build_model(name, N_CLASSES)
 
@@ -27,9 +27,9 @@ def test_2d_models_take_single_channel_224_images(name: str) -> None:
     assert model.input_shape == (None, 224, 224, 1)
 
 
-def test_novelnet_uses_pre_aff2afe_conv_filters() -> None:
+def test_alexnet_wide_uses_pre_aff2afe_conv_filters() -> None:
     # aff2afe (2019-04-04) added a sixth conv that cannot run on the 2x2 feature map.
-    model = build_model("novelnet", N_CLASSES)
+    model = build_model("alexnet_wide", N_CLASSES)
 
     conv_filters = [layer.filters for layer in model.layers if layer.__class__.__name__ == "Conv2D"]
     assert conv_filters == [96, 256, 384, 434, 500]

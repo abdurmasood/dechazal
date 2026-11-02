@@ -10,7 +10,7 @@ from arrhythmia.config import FS, ImageConfig, WindowConfig
 from arrhythmia.data.rr import RR_FEATURE_NAMES
 from arrhythmia.models.blocks import build_image_cnn
 from arrhythmia.models.cnn1d import build_cnn1d, build_cnn1d_rr
-from arrhythmia.models.image_cnns import ALEXNET, NOVELNET
+from arrhythmia.models.image_cnns import ALEXNET, ALEXNET_WIDE
 
 
 class ModelKind(Enum):
@@ -43,8 +43,8 @@ MODEL_REGISTRY: dict[str, ModelSpec] = {
     "alexnet": ModelSpec(
         lambda n: build_image_cnn(ALEXNET, ImageConfig().size, n), ModelKind.IMAGE_2D, 64
     ),
-    "novelnet": ModelSpec(
-        lambda n: build_image_cnn(NOVELNET, ImageConfig().size, n), ModelKind.IMAGE_2D, 64
+    "alexnet_wide": ModelSpec(
+        lambda n: build_image_cnn(ALEXNET_WIDE, ImageConfig().size, n), ModelKind.IMAGE_2D, 64
     ),
     "cnn1d": ModelSpec(lambda n: build_cnn1d(_window_len(), n), ModelKind.SIGNAL_1D, 256),
     "cnn1d_rr": ModelSpec(

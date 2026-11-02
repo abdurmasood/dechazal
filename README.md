@@ -11,13 +11,14 @@ Heartbeat classification on MIT-BIH, tested only on patients the model has never
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/macro-f1-dark.svg">
-  <img alt="Macro-F1 on 22 unseen patients: cnn1d_rr 39.3, cnn1d 36.4, alexnet 24.4" src="docs/macro-f1.svg" width="640">
+  <img alt="Macro-F1 on 22 unseen patients: cnn1d_rr 39.3, cnn1d 36.4, alexnet_wide 30.4, alexnet 24.4" src="docs/macro-f1.svg" width="640">
 </picture>
 
 </div>
 
-1. **The signal beats a picture of it.** On the same beats, a 1D CNN scores 36.4 macro-F1
-   and the 2019 image CNN scores 24.4.
+1. **Pictures of beats score lower than the signal and are less stable.** On the same beats,
+   a 1D CNN scores 36.4 macro-F1. The two 2019 image CNNs score 30.4 (alexnet_wide) and
+   24.4 (alexnet), and alexnet_wide's three seeds range from 19.9 to 39.4.
 2. **S beats need rhythm.** Adding RR intervals raises S sensitivity from 6% to 36%.
 3. **F beats don't transfer.** Nearly all of them come from one training patient and one
    test patient.
@@ -33,7 +34,7 @@ to compare against, along with the pipeline that produced it.
 |---|---|
 | MIT-BIH download and preprocessing | `arrhythmia download`, `arrhythmia prepare` |
 | DS1/DS2 patient split with an overlap guard | `src/arrhythmia/data/splits.py` |
-| Three models with seeded training | `arrhythmia train` |
+| Four models with seeded training | `arrhythmia train` |
 | Per-class sensitivity, PPV and F1 report | `arrhythmia report` |
 | 60 tests, about 10 s, no download needed | `uv run pytest` |
 
@@ -48,6 +49,7 @@ uv run arrhythmia prepare                       # filter, window, cache; prints 
 uv run arrhythmia train --model cnn1d    --seeds 0 1 2 3 4
 uv run arrhythmia train --model cnn1d_rr --seeds 0 1 2 3 4
 uv run arrhythmia train --model alexnet  --seeds 0 1 2   # ~7 s/epoch on an RTX 4090
+uv run arrhythmia train --model alexnet_wide --seeds 0 1 2   # ~8 s/epoch on an RTX 4090
 uv run arrhythmia report                        # prints the results table
 ```
 
@@ -58,18 +60,21 @@ uv run pytest                                   # synthetic WFDB fixtures, no ne
 MITDB_DIR=data/raw/mitdb uv run pytest -m mitdb # real data: class counts must match de Chazal
 ```
 
-## Per-class sensitivity
+## Per-class results
 
-Test set: 22 DS2 patients, 49,685 beats. Mean over seeds, in %.
+Test set: 22 DS2 patients, 49,685 beats. Each cell is sensitivity / PPV, mean over seeds, in %.
 
-| Model | Input | N | S | V | F |
-|---|---|---:|---:|---:|---:|
-| cnn1d_rr | filtered beat + RR intervals | 71.0 | 36.3 | 69.8 | 2.5 |
-| cnn1d | filtered beat | 80.3 | 5.7 | 74.9 | 0.4 |
-| alexnet | beat drawn as a 224×224 image | 42.9 | 38.0 | 70.7 | 0.0 |
+| Model | N | S | V | F |
+|---|---:|---:|---:|---:|
+| cnn1d_rr | 71.0 / 94.4 | 36.3 / 5.3 | 69.8 / 73.5 | 2.5 / 0.2 |
+| cnn1d | 80.3 / 93.6 | 5.7 / 1.4 | 74.9 / 57.4 | 0.4 / 0.1 |
+| alexnet_wide | 65.8 / 94.8 | 23.8 / 9.7 | 56.2 / 58.5 | 18.0 / 0.7 |
+| alexnet | 42.9 / 92.6 | 38.0 / 2.7 | 70.7 / 35.2 | 0.0 / 0.0 |
 
-N normal · S supraventricular ectopic · V ventricular ectopic · F fusion.
-Standard deviations and PPV are in [docs/results.md](docs/results.md#full-results).
+N normal · S supraventricular ectopic · V ventricular ectopic · F fusion. A high sensitivity
+with a tiny PPV means the model over-predicts that class: alexnet_wide's F score comes from one
+seed labelling 21,446 normal beats as F. Standard deviations are in
+[docs/results.md](docs/results.md#full-results).
 
 > [!WARNING]
 > Read before citing. F is one patient per side (records 208 and 213). The ± ranges show
