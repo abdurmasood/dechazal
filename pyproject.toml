@@ -1,0 +1,61 @@
+[project]
+name = "arrhythmia"
+version = "0.2.0"
+description = "Inter-patient ECG beat classification on MIT-BIH (AAMI classes), 1D vs 2D CNNs"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+dependencies = [
+    "keras>=3.6",
+    "jax[cpu]>=0.4.30",
+    "wfdb>=4.1",
+    "numpy>=1.26",
+    "scipy>=1.11",
+    "scikit-learn>=1.4",
+    "pillow>=10",
+    "matplotlib>=3.8",
+    # Legacy-only (scripts/); removed together with scripts/ in Phase C.
+    "pandas>=2.1",
+    "natsort>=8",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "ruff>=0.6",
+    "runpod==2.0.0rc1",
+]
+
+[project.scripts]
+arrhythmia = "arrhythmia.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/arrhythmia"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["scripts", "src"]
+markers = [
+    "mitdb: needs the real MIT-BIH records (set MITDB_DIR)",
+    "slow: long-running test",
+]
+filterwarnings = [
+    # Raised inside wfdb's own annotation tables (wfdb 4.3 vs pandas 3); not our code.
+    "ignore:The inplace keyword in DataFrame:Warning",
+    # Raised inside Keras' variable handling under numpy 2; not our code.
+    "ignore:__array__ implementation doesn't accept a copy keyword:DeprecationWarning",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "scripts"]
+# Legacy 2019 code is frozen and exempt until it is deleted in Phase C.
+extend-exclude = ["scripts"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "N", "SIM"]
